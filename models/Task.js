@@ -15,14 +15,10 @@ const Task = sequelize.define('Task', {
         type: DataTypes.TEXT,
         allowNull: true,
     },
-    typeId: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-    },
-    userId: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-    },
+    // typeId: {
+    //     type: DataTypes.INTEGER,
+    //     allowNull: true,
+    // },
     isDone: {
         type: DataTypes.BOOLEAN,
         allowNull: true,
