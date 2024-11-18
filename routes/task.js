@@ -5,7 +5,6 @@ const { Op } = require('sequelize');
 const Joi = require('joi');
 const { body, param, validationResult } = require('express-validator');
 
-
 const taskSchema = Joi.object({
     title: Joi.string().min(3).max(100).required(),
     description: Joi.string().allow('').max(500),
@@ -13,7 +12,6 @@ const taskSchema = Joi.object({
     dueDate: Joi.date(),
     completed: Joi.boolean()
 });
-
 
 router.get('/', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
