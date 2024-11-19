@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../core/db");
-const bcrypt = require('bcrypt');
+const argon2 = require("argon2");
 
 const User = sequelize.define('User', {
     email: {
@@ -21,8 +21,12 @@ const User = sequelize.define('User', {
 });
 
 User.beforeCreate(async user => {
-    const codedPassword = await bcrypt.hash(user.password, 12);
-    user.password = codedPassword;
+    try {
+        const hashedPassword = await argon2.hash(user.password);
+        user.password = hashedPassword;
+    } catch (error) {
+        throw new Error("Error hashing password");
+    }
 });
 
 module.exports = User;
