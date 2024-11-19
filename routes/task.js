@@ -5,15 +5,14 @@ const { Op } = require('sequelize');
 const Joi = require('joi');
 const { body, param, validationResult } = require('express-validator');
 
-
 const taskSchema = Joi.object({
     title: Joi.string().min(3).max(100).required(),
     description: Joi.string().allow('').max(500),
     typeId: Joi.number().integer().positive(),
     dueDate: Joi.date(),
-    completed: Joi.boolean()
+    completed: Joi.boolean(),
+    userId: Joi.number().integer().positive().required()
 });
-
 
 router.get('/', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
@@ -25,7 +24,7 @@ router.get('/', async (req, res) => {
     const nameFilter = req.query.name ? `%${req.query.name}%` : null;
     const typeFilter = req.query.type ? `%${req.query.type}%` : null;
 
-    let where = {};
+    let where = { userId: req.userId };
     if (isDone !== null) {
         where.isDone = isDone;
     }
@@ -45,7 +44,6 @@ router.get('/', async (req, res) => {
             where,
             limit: limit,
             offset: offset,
-            // attributes: { exclude: ['typeId'] }, // It is useless to have typeId, and then, the type object
             include: [{
                 model: Type, as: 'type',
                 required: typeFilter ? true : false,
@@ -61,14 +59,16 @@ router.get('/', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch tasks' });
     }
 });
+
 router.get('/:id', async (req, res) => {
     try {
-        const task = await Task.findByPk(req.params.id, {
+        const task = await Task.findOne({
+            where: { id: req.params.id, userId: req.userId },
             attributes: { exclude: ['typeId'] },
-            include: [{
-                model: Type, as: 'type'
-            }]
+            include: [{ model: Type, as: 'type' }]
         });
+
+        console.log(req.userId);
 
         if (!task) {
             return res.status(404).json({ error: 'Task not found' });
@@ -80,7 +80,6 @@ router.get('/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch task' });
     }
 });
-
 
 router.post('/',
     [
@@ -94,11 +93,11 @@ router.post('/',
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
-        const { error, value } = taskSchema.validate(req.body);
+        const { error, value } = taskSchema.validate({ ...req.body, userId: req.userId });
         if (error) {
             return res.status(400).json({ error: error.details[0].message });
         }
-        const { title, description, typeId, dueDate } = value;
+        const { title, description, typeId, dueDate, userId } = value;
         if (typeId) {
             const typeExists = await Type.findByPk(typeId);
             if (!typeExists) {
@@ -106,7 +105,7 @@ router.post('/',
             }
         }
 
-        const newTask = await Task.create({ title, description, typeId, dueDate });
+        const newTask = await Task.create({ title, description, typeId, dueDate, userId });
 
         const createdTask = await Task.findByPk(newTask.id, {
             attributes: { exclude: ['typeId'] },
@@ -119,9 +118,8 @@ router.post('/',
 router.put('/:id', async (req, res) => {
     try {
         const { title, description, typeId, completed, dueDate } = req.body;
-        console.log("The state of the task: " + title + completed);
 
-        const task = await Task.findByPk(req.params.id);
+        const task = await Task.findOne({ where: { id: req.params.id, userId: req.userId } });
         if (!task) return res.status(404).json({ error: 'Task not found' });
 
         await task.update({ title, description, typeId, isDone: completed, dueDate });
@@ -136,11 +134,10 @@ router.put('/:id', async (req, res) => {
         console.error(error);
         res.status(500).json({ error: 'An error occurred, task couldn\'t be updated' });
     }
-
 });
 
 router.delete('/:id', async (req, res) => {
-    const task = await Task.findByPk(req.params.id);
+    const task = await Task.findOne({ where: { id: req.params.id, userId: req.userId } });
     if (!task) return res.status(404).json({ error: 'Task not found' });
 
     await task.destroy();
@@ -152,6 +149,5 @@ router.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ error: 'An unexpected error occurred. Please try again later.' });
 });
-
 
 module.exports = router;

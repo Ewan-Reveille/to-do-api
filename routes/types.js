@@ -9,7 +9,7 @@ router.get('/', async(req, res, next) => {
         res.json(types);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Failed to fetch tasks' });
+        res.status(500).json({ error: 'Failed to fetch types' });
     }
 });
 

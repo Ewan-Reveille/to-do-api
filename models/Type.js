@@ -11,6 +11,10 @@ const Type = sequelize.define('Type', {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    userId : {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    }
 });
 
 module.exports = Type;
