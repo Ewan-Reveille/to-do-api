@@ -7,8 +7,8 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const logger = require('./middlewares/logger');
 const isAuthenticated = require('./middlewares/user_auth');
-require('dotenv');
-dotenv.config();
+require('dotenv').config();
+
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100

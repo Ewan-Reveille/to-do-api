@@ -2,8 +2,7 @@ var express = require('express');
 var router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken')
-require('dotenv');
-dotenv.config();
+require('dotenv').config();
 const { User } = require('../models')
 
 router.post('/signup', async (req, res) => {
